@@ -159,6 +159,7 @@
       <div class="tracks" id="tracks"></div>
       <div class="tip">
         <kbd>Space</kbd> play / pause · <kbd>←</kbd> <kbd>→</kbd> switch track · <kbd>L</kbd> loop
+        <br>No sound on iPhone/iPad? Turn the volume up and check the silent switch on the side of the device.
       </div>
     </aside>
 
@@ -458,7 +459,27 @@
   // ---------- Audio engine ----------
   let ctx, master, comp, analyser, reverb, reverbSend, noiseBuf;
 
+  // iOS mutes Web Audio when the ring/silent switch is on. Asking for a
+  // "playback" audio session (and playing a silent media element on the
+  // first tap) makes the browser treat this page like a music player.
+  let unlockEl;
+  function unlockMediaAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    if (unlockEl) return;
+    const rate = 8000, n = rate / 2, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const str = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+    str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVEfmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, n * 2, true);
+    unlockEl = new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' })));
+    unlockEl.loop = true;
+    unlockEl.setAttribute('playsinline', '');
+    unlockEl.play().catch(() => {});
+  }
+
   function initAudio() {
+    unlockMediaAudio();
     if (ctx) return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain();
@@ -664,7 +685,7 @@
 
   function start(fromBeat) {
     initAudio();
-    ctx.resume();
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
     killBus();
     const { bus, gains } = makeBus();
     S.bus = bus; S.partGains = gains;
