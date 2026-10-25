@@ -181,6 +181,71 @@
   .dot-rec { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ff4d5e; margin-right: 6px; animation: blink 1s infinite; }
   @keyframes blink { 50% { opacity: .2; } }
 
+
+  /* ---------- Mode switch ---------- */
+  [hidden] { display: none !important; }
+  .mode-seg button { padding: 7px 14px; font-size: 14px; }
+
+  /* ---------- Little Musician ---------- */
+  .little { display: grid; gap: 14px; }
+  .acts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .act {
+    width: 76px; height: 76px; border-radius: 50%; border: 4px solid var(--line); background: var(--panel);
+    font-size: 38px; cursor: pointer; box-shadow: var(--shadow); display: grid; place-items: center; padding: 0;
+    transition: transform .12s;
+  }
+  .act:active { transform: scale(.92); }
+  .act[aria-pressed="true"] { border-color: var(--accent); transform: scale(1.08); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+  .act.mini { width: 60px; height: 60px; font-size: 30px; }
+  @media (max-width: 600px) { .act { width: 58px; height: 58px; font-size: 28px; } .act.mini { width: 52px; height: 52px; font-size: 26px; } .acts { gap: 6px; } }
+  .lsongs { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .lplay { position: relative; overflow: hidden; padding: 14px; }
+  .lprompt { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 92px; }
+  .bubble {
+    position: relative; background: var(--cell); border-radius: 28px; padding: 6px 26px; font-size: 56px; line-height: 1.3;
+    min-width: 120px; text-align: center; animation: pop-in .35s ease-out;
+  }
+  .bubble::after { content: ""; position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%);
+    border: 14px solid transparent; border-top-color: var(--cell); border-bottom: 0; }
+  @keyframes pop-in { from { transform: scale(.5); opacity: 0; } }
+  .lprog { height: 14px; border-radius: 999px; background: var(--cell); overflow: hidden; margin: 18px 4px 8px; }
+  .lprog > div { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ffb703, #ff5d8f); transition: width .3s; }
+  .lgrid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .lstage { position: relative; height: 96px; }
+  .animal { font-size: 56px; text-align: center; line-height: 96px; user-select: none; }
+  .animal.jump { animation: jump .45s ease-out; }
+  .animal.wiggle { animation: wiggle .4s ease-in-out; }
+  .animal.wave { animation: jump .5s ease-out; }
+  @keyframes jump { 30% { transform: translateY(-26px) scale(1.15); } 60% { transform: translateY(0) scale(.95); } }
+  @keyframes wiggle { 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+  .lkeys { touch-action: none; user-select: none; -webkit-user-select: none; }
+  .lkey {
+    position: relative; height: 230px; border-radius: 26px; border: 0; cursor: pointer; padding: 0;
+    background: color-mix(in srgb, var(--kc) 30%, var(--white-key)); border-bottom: 12px solid var(--kc);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 14px;
+    transition: transform .06s, border-bottom-width .06s;
+  }
+  @media (max-width: 600px) { .lkey { height: 170px; border-radius: 18px; } .animal { font-size: 40px; } .bubble { font-size: 44px; } }
+  .lkey.down { transform: translateY(6px); border-bottom-width: 5px; background: color-mix(in srgb, var(--kc) 60%, var(--white-key)); }
+  .lkey .letter { font-size: 30px; font-weight: 900; color: var(--kc); text-shadow: 0 2px 0 rgba(0,0,0,.12); pointer-events: none; }
+  .lkey .face { width: 54%; aspect-ratio: 1; border-radius: 50%; background: var(--kc); opacity: .9; margin-bottom: 10px; pointer-events: none; }
+  .lkey.target { box-shadow: 0 0 0 6px var(--kc), 0 0 28px 8px color-mix(in srgb, var(--kc) 60%, transparent); }
+  .lkey.target::before { content: "👆"; position: absolute; top: 18px; font-size: 44px; animation: tap 0.9s ease-in-out infinite; pointer-events: none; }
+  .lkey.hint { animation: throb .7s ease-in-out infinite; }
+  @keyframes tap { 50% { transform: translateY(12px) scale(.92); } }
+  @keyframes throb { 50% { transform: scale(1.06); } }
+  .lkeys.locked .lkey { cursor: default; }
+  .lbottom { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .lsounds { display: flex; gap: 8px; }
+  .floaty { position: absolute; font-size: 34px; pointer-events: none; animation: floatup 1.6s ease-out forwards; z-index: 5; }
+  @keyframes floatup { to { transform: translateY(-190px) scale(1.3) rotate(20deg); opacity: 0; } }
+  .stickers { display: flex; flex-wrap: wrap; gap: 6px; font-size: 34px; min-height: 44px; align-items: center; }
+  .stickers .empty { font-size: 34px; opacity: .25; }
+  .sticker-new { animation: pop-in .5s ease-out; }
+  details.grownups { font-size: 14px; color: var(--muted); }
+  details.grownups summary { cursor: pointer; font-weight: 800; }
+  details.grownups ul { margin: 8px 0 0; padding-left: 20px; }
+
   footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 24px; }
 </style>
 </head>
@@ -192,10 +257,51 @@
       <p class="sub">Play, make beats, record your song and learn new tunes!</p>
     </div>
     <div class="head-tools">
+      <div class="seg mode-seg" id="modeSeg" role="group" aria-label="Mode">
+        <button type="button" data-mode="little" aria-pressed="false">🧸 Little Musician</button>
+        <button type="button" data-mode="big" aria-pressed="true">🎹 Big Keyboard</button>
+      </div>
       <label class="vol">🔊 <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume"></label>
       <button class="pill" id="themeBtn" type="button" aria-label="Switch light or dark">🌙 / ☀️</button>
     </div>
   </header>
+
+  <div id="littleMode" class="little" hidden>
+    <div class="card">
+      <div class="acts" id="lActs" role="group" aria-label="Activities"></div>
+      <div class="lsongs" id="lSongs" hidden></div>
+    </div>
+
+    <div class="card lplay">
+      <div class="lprompt"><div class="bubble" id="lBubble">🎨</div></div>
+      <div class="lprog" aria-hidden="true"><div id="lProg"></div></div>
+      <div class="lgrid lstage" id="lStage"></div>
+      <div class="lgrid lkeys" id="lKeys"></div>
+      <div class="lbottom">
+        <div class="lsounds" id="lSounds" role="group" aria-label="Sounds"></div>
+        <button class="act mini" id="lAgain" type="button" aria-label="Play again" title="Play again" hidden>🔁</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stickers" id="lStickers" aria-label="Stickers"></div>
+    </div>
+
+    <details class="grownups">
+      <summary>👋 For grown-ups: how to play</summary>
+      <ul>
+        <li>🎨 <b>Free play</b>: tap any key. Each note has its own animal: C = 🐱 Cat, D = 🐶 Dog, E = 🐘 Elephant, F = 🐸 Frog, G = 🦒 Giraffe.</li>
+        <li>⭐ <b>Find it</b>: an animal shows up in the bubble. Find its key (the 👆 helps). 5 in a row earns a sticker.</li>
+        <li>🪜 <b>Stairs</b>: climb up C D E F G and back down, following the 👆.</li>
+        <li>🦜 <b>Copy me</b>: watch and listen to the animals sing (👀), then copy them (👆). It starts with 1 note and grows to 3.</li>
+        <li>🎵 <b>Songs</b>: 🥐 Hot Cross Buns, 🐑 Mary Had a Little Lamb and 🎻 Ode to Joy. 👂 plays the song first.</li>
+        <li>Wrong taps still make music, so there's no "wrong" sound. After two misses the right key gently grows as a hint.</li>
+        <li>Pick a sound at the bottom: 🎹 piano, 🪇 xylophone, 🪈 flute or 🤖 robot.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div id="bigMode">
 
   <div class="stage">
     <canvas id="fx"></canvas>
@@ -263,6 +369,8 @@
         <p class="rec-status" id="recStatus">Press Record, then play some keys!</p>
       </section>
     </div>
+  </div>
+
   </div>
 
   <footer>Every sound is made live in your browser with the Web Audio API. 🎶</footer>
@@ -638,7 +746,7 @@
   window.addEventListener('pointercancel', up);
 
   document.addEventListener('keydown', (e) => {
-    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.target.matches('input')) return;
+    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.target.matches('input') || $('bigMode').hidden) return;
     const k = e.key.toLowerCase();
     if (KEYMAP[k] != null) { e.preventDefault(); noteOn(KEYMAP[k], 'k' + k); }
   });
@@ -1009,6 +1117,331 @@
     try { localStorage.setItem('tt-theme', root.dataset.theme); } catch (e) {}
   });
 
+  // ---------- Little Musician (ages 3-4): five white keys C-G, no reading needed ----------
+  const FIVE = [
+    { m: 60, letter: 'C', animal: '🐱' },
+    { m: 62, letter: 'D', animal: '🐶' },
+    { m: 64, letter: 'E', animal: '🐘' },
+    { m: 65, letter: 'F', animal: '🐸' },
+    { m: 67, letter: 'G', animal: '🦒' },
+  ];
+  const ANIMAL = Object.fromEntries(FIVE.map((n) => [n.m, n.animal]));
+  const LSONGS = [
+    { em: '🥐', bpm: 100, notes: 'E4 D4 C4:2 E4 D4 C4:2 C4:.5 C4:.5 C4:.5 C4:.5 D4:.5 D4:.5 D4:.5 D4:.5 E4 D4 C4:2' },
+    { em: '🐑', bpm: 110, notes: 'E4 D4 C4 D4 E4 E4 E4:2 D4 D4 D4:2 E4 G4 G4:2' },
+    { em: '🎻', bpm: 110, notes: 'E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2' },
+  ].map((s) => ({ ...s, seq: s.notes.split(' ').map((x) => { const [n, b] = x.split(':'); return { m: midi(n), b: b ? +b : 1 }; }) }));
+  const ACTS = [
+    { id: 'free', em: '🎨', title: 'Free play' },
+    { id: 'find', em: '⭐', title: 'Find it' },
+    { id: 'stairs', em: '🪜', title: 'Stairs' },
+    { id: 'copy', em: '🦜', title: 'Copy me' },
+    { id: 'songs', em: '🎵', title: 'Songs' },
+  ];
+  const LSOUNDS = ['piano', 'xylo', 'flute', 'robot'].map((id) => INSTRUMENTS.find((x) => x.id === id));
+  const STICKERS = ['🦄', '🌈', '🍦', '🚀', '🦋', '🐳', '🍓', '🎈', '🌻', '🐞', '🍩', '🐙', '🦖', '🌟', '🐝', '🍉'];
+  const L = { act: 'free', inst: LSOUNDS[0], seq: [], idx: 0, round: 0, wrong: 0, busy: false, timers: [], taps: 0, song: null, stickers: [] };
+  const lKeyEls = {}, lAnimalEls = {}, lHeld = {};
+
+  function buildLittle() {
+    FIVE.forEach((n) => {
+      const a = document.createElement('div');
+      a.className = 'animal'; a.textContent = n.animal; a.setAttribute('aria-hidden', 'true');
+      $('lStage').appendChild(a); lAnimalEls[n.m] = a;
+      const k = document.createElement('button');
+      k.type = 'button'; k.className = 'lkey'; k.dataset.m = n.m;
+      k.style.setProperty('--kc', COLORS[n.m % 12]);
+      k.setAttribute('aria-label', `${n.letter} ${n.animal}`);
+      k.innerHTML = `<span class="face"></span><span class="letter">${n.letter}</span>`;
+      $('lKeys').appendChild(k); lKeyEls[n.m] = k;
+    });
+    ACTS.forEach((a) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'act'; b.textContent = a.em; b.dataset.act = a.id;
+      b.title = a.title; b.setAttribute('aria-label', a.title);
+      b.addEventListener('click', () => { audio(); startAct(a.id); });
+      $('lActs').appendChild(b);
+    });
+    LSONGS.forEach((s, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'act mini'; b.textContent = s.em; b.dataset.song = i;
+      b.setAttribute('aria-label', 'Song ' + (i + 1));
+      b.addEventListener('click', () => { audio(); startAct('songs', s); });
+      $('lSongs').appendChild(b);
+    });
+    const listen = document.createElement('button');
+    listen.type = 'button'; listen.className = 'act mini'; listen.textContent = '👂'; listen.id = 'lListen';
+    listen.title = 'Listen first'; listen.setAttribute('aria-label', 'Listen first');
+    listen.addEventListener('click', () => { audio(); if (L.song) demo(L.song.seq.map((x) => x.m), L.song.seq.map((x) => x.b * 60 / L.song.bpm), () => setTarget(L.seq[L.idx])); });
+    $('lSongs').appendChild(listen);
+    LSOUNDS.forEach((it) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'act mini'; b.textContent = it.em;
+      b.title = it.name; b.setAttribute('aria-label', it.name);
+      b.addEventListener('click', () => {
+        L.inst = it; audio();
+        it.play(67, ctx.currentTime).release(ctx.currentTime + .3);
+        [...$('lSounds').children].forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      });
+      b.setAttribute('aria-pressed', String(it === L.inst));
+      $('lSounds').appendChild(b);
+    });
+    $('lAgain').addEventListener('click', () => { audio(); startAct(L.act, L.song); });
+
+    // touch / mouse: every finger is its own note; no sliding, so little hands don't trigger extra notes
+    $('lKeys').addEventListener('pointerdown', (e) => {
+      const k = e.target.closest('.lkey');
+      if (!k) return;
+      e.preventDefault();
+      lPress(+k.dataset.m, 'p' + e.pointerId);
+    });
+    const lUp = (e) => lRelease('p' + e.pointerId);
+    window.addEventListener('pointerup', lUp);
+    window.addEventListener('pointercancel', lUp);
+    // computer keys for grown-ups: A S D F G (or 1-5)
+    const LMAP = { a: 60, s: 62, d: 64, f: 65, g: 67, 1: 60, 2: 62, 3: 64, 4: 65, 5: 67 };
+    document.addEventListener('keydown', (e) => {
+      if (!littleOn() || e.repeat || e.metaKey || e.ctrlKey) return;
+      const m = LMAP[e.key.toLowerCase()];
+      if (m) { e.preventDefault(); e.stopImmediatePropagation(); lPress(m, 'k' + e.key); }
+    }, true);
+    document.addEventListener('keyup', (e) => { if (littleOn()) lRelease('k' + e.key); }, true);
+    renderStickers();
+  }
+  const littleOn = () => !$('littleMode').hidden;
+
+  function anim(el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+  function floaty(m, ch) {
+    const k = lKeyEls[m], box = $('lStage').getBoundingClientRect(), r = k.getBoundingClientRect(), play = document.querySelector('.lplay').getBoundingClientRect();
+    const f = document.createElement('span');
+    f.className = 'floaty'; f.textContent = ch;
+    f.style.left = (r.left - play.left + r.width / 2 - 17 + (Math.random() - .5) * 30) + 'px';
+    f.style.top = (box.top - play.top + 20) + 'px';
+    document.querySelector('.lplay').appendChild(f);
+    setTimeout(() => f.remove(), 1700);
+  }
+  function confetti() {
+    const glyphs = ['⭐', '🎉', '✨', '🌟', '🎈', '💖'];
+    FIVE.forEach((n, i) => {
+      for (let j = 0; j < 4; j++) L.timers.push(setTimeout(() => floaty(n.m, glyphs[Math.floor(Math.random() * glyphs.length)]), j * 150 + i * 60));
+      L.timers.push(setTimeout(() => anim(lAnimalEls[n.m], 'jump'), i * 90));
+    });
+  }
+  function sing(m, dur = .35) {
+    L.inst.play(m, ctx.currentTime).release(ctx.currentTime + dur);
+    lKeyEls[m].classList.add('down');
+    anim(lAnimalEls[m], 'jump');
+    floaty(m, ['♪', '♫'][Math.floor(Math.random() * 2)]);
+    L.timers.push(setTimeout(() => { if (!Object.values(lHeld).includes(m)) lKeyEls[m].classList.remove('down'); }, dur * 1000));
+  }
+
+  function lPress(m, src) {
+    audio();
+    if (L.busy) return; // animals are showing a tune; watch first
+    if (lHeld[src]) lRelease(src);
+    const v = L.inst.play(m, ctx.currentTime);
+    lHeld[src] = m; lHeld[src + ':v'] = v;
+    lKeyEls[m].classList.add('down');
+    anim(lAnimalEls[m], 'jump');
+    floaty(m, ['♪', '♫', '♩'][Math.floor(Math.random() * 3)]);
+    judge(m);
+  }
+  function lRelease(src) {
+    const m = lHeld[src];
+    if (m == null) return;
+    lHeld[src + ':v'].release();
+    delete lHeld[src]; delete lHeld[src + ':v'];
+    if (!Object.values(lHeld).includes(m)) lKeyEls[m].classList.remove('down');
+  }
+
+  function clearTimers() { L.timers.forEach(clearTimeout); L.timers = []; }
+  function setTarget(m) {
+    Object.values(lKeyEls).forEach((k) => k.classList.remove('target', 'hint'));
+    if (m != null) lKeyEls[m].classList.add('target');
+    L.wrong = 0;
+  }
+  function bubble(html) {
+    const b = $('lBubble');
+    b.innerHTML = html;
+    anim(b, 'bubble');
+  }
+  function progress(frac) { $('lProg').style.width = Math.round(frac * 100) + '%'; }
+
+  function startAct(act, song) {
+    clearTimers();
+    L.act = act; L.idx = 0; L.round = 0; L.busy = false; L.song = null; L.taps = 0;
+    $('lKeys').classList.remove('locked');
+    $('lAgain').hidden = true;
+    [...$('lActs').children].forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.act === act)));
+    $('lSongs').hidden = act !== 'songs';
+    setTarget(null); progress(0);
+    try { localStorage.setItem('tt-lact', act); } catch (e) {}
+    if (act === 'free') {
+      L.seq = [];
+      bubble('🎨');
+      $('lProg').parentElement.hidden = true;
+      return;
+    }
+    $('lProg').parentElement.hidden = false;
+    if (act === 'find') {
+      L.seq = [];
+      let last = null;
+      for (let i = 0; i < 5; i++) {
+        const pool = FIVE.map((n) => n.m).filter((m) => m !== last);
+        last = pool[Math.floor(Math.random() * pool.length)];
+        L.seq.push(last);
+      }
+      showFind();
+    } else if (act === 'stairs') {
+      L.seq = [60, 62, 64, 65, 67, 65, 64, 62, 60];
+      bubble('🪜');
+      setTarget(L.seq[0]);
+    } else if (act === 'copy') {
+      L.seq = [];
+      nextCopyRound();
+    } else if (act === 'songs') {
+      [...$('lSongs').children].forEach((b) => b.setAttribute('aria-pressed', String(song && b.dataset.song == LSONGS.indexOf(song))));
+      if (!song) { bubble('🎵'); $('lProg').parentElement.hidden = true; L.seq = []; return; }
+      L.song = song;
+      L.seq = song.seq.map((x) => x.m);
+      bubble(song.em);
+      setTarget(L.seq[0]);
+    }
+  }
+  function showFind() {
+    const m = L.seq[L.idx];
+    bubble(ANIMAL[m]);
+    setTarget(m);
+  }
+
+  // Copy me: rounds grow from 1 to 3 notes
+  const COPY_LEN = [1, 1, 2, 2, 3];
+  function nextCopyRound() {
+    const len = COPY_LEN[L.round];
+    const tune = [];
+    for (let i = 0; i < len; i++) tune.push(FIVE[Math.floor(Math.random() * 5)].m);
+    L.seq = tune; L.idx = 0;
+    progress(L.round / COPY_LEN.length);
+    playCopyDemo();
+  }
+  function playCopyDemo() {
+    setTarget(null);
+    bubble('👀');
+    L.timers.push(setTimeout(() => demo(L.seq, L.seq.map(() => .7), () => { bubble('👆'); }), 700));
+  }
+  // The animals sing a tune by themselves; little keys are locked until they're done
+  function demo(notes, durs, after) {
+    L.busy = true;
+    $('lKeys').classList.add('locked');
+    setTarget(null);
+    let t = 0;
+    notes.forEach((m, i) => {
+      L.timers.push(setTimeout(() => sing(m, durs[i] * .85), t * 1000));
+      t += durs[i];
+    });
+    L.timers.push(setTimeout(() => {
+      L.busy = false;
+      $('lKeys').classList.remove('locked');
+      after && after();
+    }, t * 1000 + 150));
+  }
+
+  function judge(m) {
+    if (L.act === 'free') {
+      L.taps++;
+      if (L.taps % 16 === 0) confetti();
+      return;
+    }
+    if (!L.seq.length || L.idx >= L.seq.length) return;
+    if (m === L.seq[L.idx]) {
+      L.idx++;
+      if (L.act === 'copy') {
+        if (L.idx >= L.seq.length) {
+          L.round++;
+          progress(L.round / COPY_LEN.length);
+          if (L.round >= COPY_LEN.length) return finish();
+          bubble('👏');
+          confettiSmall(m);
+          L.timers.push(setTimeout(nextCopyRound, 1300));
+        }
+        return;
+      }
+      progress(L.idx / L.seq.length);
+      if (L.idx >= L.seq.length) return finish();
+      if (L.act === 'find') { confettiSmall(m); L.timers.push(setTimeout(showFind, 500)); setTarget(null); }
+      else setTarget(L.seq[L.idx]);
+    } else {
+      anim(lAnimalEls[m], 'wiggle');
+      if (L.act === 'copy') {
+        // gently show the tune again
+        L.idx = 0;
+        L.busy = true;
+        L.timers.push(setTimeout(() => { L.busy = false; playCopyDemo(); }, 600));
+        return;
+      }
+      L.wrong++;
+      if (L.wrong >= 2) lKeyEls[L.seq[L.idx]].classList.add('hint');
+    }
+  }
+  function confettiSmall(m) { floaty(m, '⭐'); floaty(m, '✨'); }
+
+  function finish() {
+    setTarget(null);
+    progress(1);
+    const st = STICKERS[Math.floor(Math.random() * STICKERS.length)];
+    L.stickers.push(st);
+    try { localStorage.setItem('tt-stickers', JSON.stringify(L.stickers)); } catch (e) {}
+    renderStickers(true);
+    bubble('🎉 ' + st);
+    confetti();
+    // a happy little fanfare
+    [60, 64, 67, 72].forEach((m, i) => L.timers.push(setTimeout(() => {
+      const v = L.inst.play(m, ctx.currentTime); v.release(ctx.currentTime + (i === 3 ? .6 : .15));
+    }, i * 140)));
+    $('lAgain').hidden = false;
+  }
+  function renderStickers(isNew) {
+    const box = $('lStickers');
+    box.innerHTML = '';
+    const shown = L.stickers.slice(-24);
+    shown.forEach((s, i) => {
+      const el = document.createElement('span');
+      el.textContent = s;
+      if (isNew && i === shown.length - 1) el.className = 'sticker-new';
+      box.appendChild(el);
+    });
+    for (let i = shown.length; i < 5; i++) {
+      const el = document.createElement('span'); el.className = 'empty'; el.textContent = '⭐'; box.appendChild(el);
+    }
+  }
+
+  function setMode(mode) {
+    const little = mode === 'little';
+    $('littleMode').hidden = !little;
+    $('bigMode').hidden = little;
+    [...$('modeSeg').children].forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+    document.querySelector('header .sub').textContent = little ? 'Tap the animals to make music! 🐱🐶🐘🐸🦒' : 'Play, make beats, record your song and learn new tunes!';
+    if (little) {
+      if (beat.on) toggleBeat();
+      stopListen();
+      if (rec.state === 'playing') stopPlayback();
+      Object.keys(sounding).forEach(noteOff);
+    } else {
+      clearTimers(); L.busy = false;
+    }
+    try { localStorage.setItem('tt-mode', mode); } catch (e) {}
+  }
+  $('modeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    setMode(b.dataset.mode);
+    if (b.dataset.mode === 'little') {
+      // the animals say hello, one after another
+      audio();
+      FIVE.forEach((n, i) => L.timers.push(setTimeout(() => sing(n.m, .25), 200 + i * 160)));
+    }
+  });
+
   // ---------- Start ----------
   buildInstruments();
   buildKeyboard();
@@ -1033,8 +1466,17 @@
   try { savedBpm = +localStorage.getItem('tt-bpm'); } catch (e) {}
   setPace(savedBpm || 100);
   setRecUI();
+  buildLittle();
+  try {
+    const st = JSON.parse(localStorage.getItem('tt-stickers') || '[]');
+    if (Array.isArray(st)) { L.stickers = st.filter((x) => typeof x === 'string'); renderStickers(); }
+  } catch (e) {}
+  let savedAct = null, savedMode = null;
+  try { savedAct = localStorage.getItem('tt-lact'); savedMode = localStorage.getItem('tt-mode'); } catch (e) {}
+  startAct(ACTS.some((a) => a.id === savedAct) ? savedAct : 'free');
+  setMode(savedMode === 'little' ? 'little' : 'big');
   requestAnimationFrame(draw);
-  window.__tuneTown = { INSTRUMENTS, noteOn, noteOff, beat, rec, game };
+  window.__tuneTown = { INSTRUMENTS, noteOn, noteOff, beat, rec, game, L };
 })();
 </script>
 </body>
