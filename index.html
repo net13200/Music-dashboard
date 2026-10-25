@@ -79,8 +79,8 @@
   .stage-msg small { display: block; font-size: 14px; font-weight: 700; opacity: .8; }
 
   /* Instruments */
-  .instruments { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
-  @media (max-width: 760px) { .instruments { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .instruments { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  @media (max-width: 760px) { .instruments { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .inst {
     border: 3px solid transparent; background: var(--panel); border-radius: 18px; padding: 8px 4px 6px; cursor: pointer;
     box-shadow: var(--shadow); display: grid; justify-items: center; gap: 2px; font-weight: 800; font-size: 13px;
@@ -159,8 +159,16 @@
   .cell[aria-pressed="true"] { background: var(--rc); box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); }
   .cell.now { outline: 3px solid var(--accent-2); outline-offset: -1px; }
   .cell.now[aria-pressed="true"] { transform: scale(1.12); }
-  .tempo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; }
-  .tempo input { width: 140px; }
+  .pace { margin-top: 12px; padding: 10px; border-radius: 16px; background: var(--cell); }
+  .pace-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 800; margin-bottom: 8px; }
+  .pace-num { font-variant-numeric: tabular-nums; }
+  .pace-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .pace-buttons .btn { padding: 6px 4px; font-size: 13px; display: grid; justify-items: center; line-height: 1.2; }
+  .pace-buttons .btn .em { font-size: 22px; }
+  .pace-slider { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .pace-slider input { flex: 1; min-width: 0; }
+  .pace-slider .btn { width: 36px; padding: 4px 0; }
+  .btn[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
 
   /* Songs */
   .songs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -217,9 +225,18 @@
       <h2 id="beatTitle">🥁 Beat Maker</h2>
       <div class="row">
         <button class="btn primary" id="beatPlay" type="button">▶ Play beat</button>
-        <label class="tempo">🐢 <input type="range" id="tempo" min="60" max="160" value="100" aria-label="Speed"> 🐇 <span id="tempoVal">100</span></label>
+        <span class="muted">Pick a beat:</span>
       </div>
       <div class="row" style="margin-top:10px" id="presets"></div>
+      <div class="pace">
+        <div class="pace-head"><span>⏱️ Pace</span><span class="pace-num"><span id="tempoVal">100</span> beats a minute</span></div>
+        <div class="pace-buttons" id="paceButtons"></div>
+        <div class="pace-slider">
+          <button class="btn small" id="slower" type="button" aria-label="Slower">−</button>
+          <input type="range" id="tempo" min="50" max="180" value="100" aria-label="Pace">
+          <button class="btn small" id="faster" type="button" aria-label="Faster">+</button>
+        </div>
+      </div>
       <div class="grid-wrap"><div class="beat-grid" id="beatGrid"></div></div>
       <p class="muted" style="margin:0">Tap the squares to turn sounds on and off. Tap a sound's name to hear it.</p>
     </section>
@@ -406,6 +423,28 @@
       lp.connect(v.out);
       v.srcs.push(osc('sawtooth', f, t, lp, -5), osc('sawtooth', f, t, lp, 5));
       v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.32, t + .04); v.out.gain.setTargetAtTime(.25, t + .04, .15);
+      return v;
+    } },
+    { id: 'sax', name: 'Saxophone', em: '🎷', color: '#d98e04', play(m, t) {
+      // reedy saw+square through a resonant "body" filter, with a little scoop up into the note
+      const v = voice(.22, .12), f = hz(m - 12);
+      const bp = ctx.createBiquadFilter(), lp = ctx.createBiquadFilter();
+      bp.type = 'peaking'; bp.frequency.value = 1100; bp.Q.value = 1.4; bp.gain.value = 9;
+      lp.type = 'lowpass'; lp.Q.value = 1;
+      lp.frequency.setValueAtTime(900, t); lp.frequency.linearRampToValueAtTime(2600, t + .08); lp.frequency.setTargetAtTime(1800, t + .08, .3);
+      bp.connect(lp); lp.connect(v.out);
+      const sq = ctx.createGain(); sq.gain.value = .5; sq.connect(bp);
+      const a = osc('sawtooth', f, t, bp), b = osc('square', f, t, sq, 4);
+      const lfo = ctx.createOscillator(), lg = ctx.createGain();
+      lfo.frequency.value = 5.2; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(0, t + .25); lg.gain.linearRampToValueAtTime(14, t + .7);
+      lfo.connect(lg); lfo.start(t);
+      [a, b].forEach((o) => { o.detune.setValueAtTime(-40, t); o.detune.linearRampToValueAtTime(0, t + .07); lg.connect(o.detune); });
+      const nf = ctx.createBiquadFilter(), ng = ctx.createGain();
+      nf.type = 'bandpass'; nf.frequency.value = 2500; nf.Q.value = 1;
+      ng.gain.setValueAtTime(.12, t); ng.gain.setTargetAtTime(.025, t + .04, .08);
+      nf.connect(ng); ng.connect(v.out);
+      v.srcs.push(a, b, lfo, noise(t, t + 30, nf));
+      v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.3, t + .05); v.out.gain.setTargetAtTime(.24, t + .05, .2);
       return v;
     } },
     { id: 'organ', name: 'Organ', em: '⛪', color: '#7b61ff', play(m, t) {
@@ -638,14 +677,24 @@
   // ---------- Beat maker ----------
   const STEPS = 16;
   const pattern = DRUMS.map(() => Array(STEPS).fill(false));
+  // Each beat has a suggested pace (bpm); the pace controls can change it afterwards
+  const ALL = [...Array(16).keys()];
   const PRESETS = {
-    '🎸 Rock': { kick: [0, 8], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14] },
-    '🕺 Disco': { kick: [0, 4, 8, 12], clap: [4, 12], hat: [2, 6, 10, 14] },
-    '🧢 Hip-hop': { kick: [0, 3, 10], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14, 15] },
-    '🎉 Party': { kick: [0, 4, 8, 12], clap: [4, 12], cow: [0, 3, 6, 10, 12], hat: [2, 6, 10, 14] },
-    '🎺 March': { kick: [0, 8], snare: [4, 6, 12, 13, 14, 15], cow: [0, 8] },
+    '🎸 Rock': { bpm: 110, kick: [0, 8], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14] },
+    '🕺 Disco': { bpm: 118, kick: [0, 4, 8, 12], clap: [4, 12], hat: [2, 6, 10, 14] },
+    '🧢 Hip-hop': { bpm: 90, kick: [0, 3, 10], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14, 15] },
+    '🎉 Party': { bpm: 124, kick: [0, 4, 8, 12], clap: [4, 12], cow: [0, 3, 6, 10, 12], hat: [2, 6, 10, 14] },
+    '🎺 March': { bpm: 112, kick: [0, 8], snare: [4, 6, 12, 13, 14, 15], cow: [0, 8] },
+    '🕶️ Funk': { bpm: 100, kick: [0, 3, 7, 10], snare: [4, 12, 15], hat: ALL, clap: [12] },
+    '🎷 Jazz': { bpm: 120, kick: [0, 10], snare: [4, 12], hat: [0, 4, 7, 8, 12, 15] },
+    '🌴 Reggae': { bpm: 76, kick: [8], snare: [8], hat: [2, 6, 10, 14], cow: [4, 12] },
+    '💃 Samba': { bpm: 100, kick: [0, 3, 4, 7, 8, 11, 12, 15], hat: ALL, cow: [0, 3, 6, 10, 12] },
+    '🤖 Robot': { bpm: 105, kick: [0, 2, 8, 10], snare: [4, 12], cow: [6, 14], hat: [1, 5, 9, 13] },
+    '🐎 Gallop': { bpm: 130, kick: [0, 8], snare: [4, 12], hat: [0, 3, 4, 7, 8, 11, 12, 15] },
+    '🥁 Drumroll': { bpm: 90, kick: [0], snare: ALL, cow: [0] },
     '🧹 Clear': {},
   };
+  const PACES = [['🐢', 'Slow', 70], ['🚶', 'Walk', 95], ['🏃', 'Run', 125], ['🚀', 'Zoom', 160]];
   const cells = [];
   function buildBeatGrid() {
     const grid = $('beatGrid');
@@ -677,12 +726,30 @@
     Object.entries(PRESETS).forEach(([name, p]) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'btn small'; b.textContent = name;
+      b.setAttribute('aria-pressed', 'false');
       b.addEventListener('click', () => {
         loadPattern(p);
+        [...pbox.children].forEach((x) => x.setAttribute('aria-pressed', String(x === b && !!p.bpm)));
+        if (p.bpm) setPace(p.bpm);
         if (name !== '🧹 Clear' && !beat.on) toggleBeat();
       });
       pbox.appendChild(b);
     });
+    const paceBox = $('paceButtons');
+    PACES.forEach(([em, label, bpm]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn'; b.dataset.bpm = bpm;
+      b.innerHTML = `<span class="em">${em}</span><span>${label}</span>`;
+      b.addEventListener('click', () => setPace(bpm));
+      paceBox.appendChild(b);
+    });
+  }
+  function setPace(bpm) {
+    beat.bpm = Math.max(50, Math.min(180, Math.round(bpm)));
+    $('tempo').value = beat.bpm;
+    $('tempoVal').textContent = beat.bpm;
+    [...$('paceButtons').children].forEach((x) => x.setAttribute('aria-pressed', String(+x.dataset.bpm === beat.bpm)));
+    try { localStorage.setItem('tt-bpm', beat.bpm); } catch (e) {}
   }
   function loadPattern(p) {
     DRUMS.forEach((d, r) => {
@@ -920,7 +987,9 @@
 
   // ---------- Other controls ----------
   $('beatPlay').addEventListener('click', toggleBeat);
-  $('tempo').addEventListener('input', (e) => { beat.bpm = +e.target.value; $('tempoVal').textContent = beat.bpm; });
+  $('tempo').addEventListener('input', (e) => setPace(+e.target.value));
+  $('slower').addEventListener('click', () => setPace(beat.bpm - 5));
+  $('faster').addEventListener('click', () => setPace(beat.bpm + 5));
   $('vol').addEventListener('input', (e) => { if (master) master.gain.setTargetAtTime(+e.target.value / 100 * .9, ctx.currentTime, .02); });
   function setLabels(mode) {
     labelMode = mode;
@@ -960,6 +1029,9 @@
     if (Array.isArray(rn) && rn.length) { rec.notes = rn; $('recStatus').textContent = `Your saved song has ${rn.length} notes. Press Play!`; }
   } catch (e) {}
   if (!beatLoaded) loadPattern(PRESETS['🎸 Rock']);
+  let savedBpm = null;
+  try { savedBpm = +localStorage.getItem('tt-bpm'); } catch (e) {}
+  setPace(savedBpm || 100);
   setRecUI();
   requestAnimationFrame(draw);
   window.__tuneTown = { INSTRUMENTS, noteOn, noteOff, beat, rec, game };
