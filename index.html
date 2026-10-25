@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tune Town</title>
 <meta name="description" content="A music playground for kids: a two-octave keyboard with fun instruments, a beat maker, a recorder and a learn-a-song game.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#ff5d8f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tune Town">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root {
     --bg: #fff8ec;
@@ -48,7 +55,16 @@
     font: 16px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
     min-height: 100vh;
     -webkit-tap-highlight-color: transparent;
+    /* no text selection, long-press menus or "search with Google" while kids hold keys */
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    touch-action: manipulation; overscroll-behavior: none;
   }
+  input, textarea { -webkit-user-select: auto; user-select: auto; }
+  .wrap { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-top: max(18px, env(safe-area-inset-top)); }
+  .install-tip { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); z-index: 50; max-width: 460px; margin: 0 auto;
+    background: var(--panel); border: 2px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 14px 16px; font-size: 15px; }
+  .install-tip b { display: block; margin-bottom: 4px; }
+  .install-tip .row { justify-content: flex-end; margin-top: 8px; }
   button { font: inherit; color: inherit; }
   .wrap { max-width: 1100px; margin: 0 auto; padding: 18px 16px 40px; }
 
@@ -262,6 +278,7 @@
         <button type="button" data-mode="big" aria-pressed="true">🎹 Big Keyboard</button>
       </div>
       <label class="vol">🔊 <input type="range" id="vol" min="0" max="100" value="80" aria-label="Volume"></label>
+      <button class="pill" id="installBtn" type="button" hidden>📲 Install app</button>
       <button class="pill" id="themeBtn" type="button" aria-label="Switch light or dark">🌙 / ☀️</button>
     </div>
   </header>
@@ -371,6 +388,12 @@
     </div>
   </div>
 
+  </div>
+
+  <div class="install-tip" id="installTip" role="dialog" aria-labelledby="installTipTitle" hidden>
+    <b id="installTipTitle">📲 Put Tune Town on your home screen</b>
+    <span id="installTipText"></span>
+    <div class="row"><button class="btn small" id="installTipClose" type="button">Got it</button></div>
   </div>
 
   <footer>Every sound is made live in your browser with the Web Audio API. 🎶</footer>
@@ -1441,6 +1464,37 @@
       FIVE.forEach((n, i) => L.timers.push(setTimeout(() => sing(n.m, .25), 200 + i * 160)));
     }
   });
+
+
+  // ---------- No long-press menus / text selection (stops "search with Google" pop-ups) ----------
+  document.addEventListener('contextmenu', (e) => { if (!e.target.matches('input, textarea')) e.preventDefault(); });
+  document.addEventListener('selectstart', (e) => { if (!e.target.matches('input, textarea')) e.preventDefault(); });
+  // On the keys, also cancel the touch itself so the browser never starts a long-press gesture.
+  // Keys are played from pointer events, so this doesn't affect playing.
+  [$('keyboard'), $('lKeys')].forEach((el) => el.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false }));
+
+  // ---------- Install as an app ----------
+  const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  let installEvt = null;
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; if (!standalone) $('installBtn').hidden = false; });
+  window.addEventListener('appinstalled', () => { $('installBtn').hidden = true; $('installTip').hidden = true; });
+  if (!standalone && isIOS) $('installBtn').hidden = false;
+  $('installBtn').addEventListener('click', async () => {
+    if (installEvt) {
+      installEvt.prompt();
+      const { outcome } = await installEvt.userChoice;
+      if (outcome === 'accepted') $('installBtn').hidden = true;
+      installEvt = null;
+      return;
+    }
+    $('installTipText').innerHTML = isIOS
+      ? 'In Safari, tap the <b style="display:inline">Share</b> button <span aria-hidden="true">⬆️</span>, then choose <b style="display:inline">Add to Home Screen</b>. Tune Town will open full screen, like an app.'
+      : 'Open your browser menu <span aria-hidden="true">⋮</span> and choose <b style="display:inline">Install app</b> or <b style="display:inline">Add to Home screen</b>.';
+    $('installTip').hidden = false;
+  });
+  $('installTipClose').addEventListener('click', () => { $('installTip').hidden = true; });
 
   // ---------- Start ----------
   buildInstruments();
