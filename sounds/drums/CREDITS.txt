@@ -1,0 +1,22 @@
+Drum kit recordings
+
+Source: Virtuosity Drums (sfzinstruments), released under CC0 1.0
+  https://github.com/sfzinstruments/virtuosity_drums
+
+Each file is one hit, converted to MP3 (128 kbps), with leading silence removed, peak-normalized to -1 dB,
+shortened and faded out at the end. Original files:
+  kick Samples/mid/kick/mid_kick_snoff_vl3_rr1.flac
+  snare Samples/mid/snare/mid_snare_center_vl28.flac
+  hhclosed Samples/mid/hh/mid_hh_closed_vl3_rr1.flac
+  hhopen Samples/mid/hh/mid_hh_open_vl3_rr1.flac
+  tomhigh Samples/mid/htom/mid_htom_center_vl12.flac
+  tomfloor Samples/mid/ltom/mid_ltom_center_vl12.flac
+  crash Samples/mid/crash/mid_crash_crash_vl2_rr1.flac
+  ride Samples/mid/ride/mid_ride_ride_vl2_rr1.flac
+  tambourine Samples/perc/oh/tambourine/Tamb1_Shake_rr1_Overhead.wav
+  cowbell Samples/perc/oh/cowbell/Cowbell1_Normal_v2_rr1_Overhead.wav
+  triangle Samples/perc/oh/triangle/Triangle1_Hit_v2_rr1_Overhead.wav
+  woodblock Samples/perc/oh/woodblock/woodblock_hi_vl3_rr1.wav
+  bongohigh Samples/perc/oh/bongoh/BongoH_Hit1_v2_rr1_Overhead.wav
+  bongolow Samples/perc/oh/bongol/BongoL_Hit1_v2_rr1_Overhead.wav
+  shaker Samples/perc/oh/shaker/LShaker_Shake1D_rr1_Overhead.wav

@@ -1,0 +1,10 @@
+Electric guitar recordings
+
+Source: Karoryfer Samples (electric guitar). tonejs-instruments lists the source only as "Karoryfer"
+  and doesn't name the library; Karoryfer's free libraries are released under open licenses (for example CC0).
+  https://www.karoryfer.com/karoryfer-samples
+Edited (trimmed, normalized, volume-matched) by Nicholaus P. Brosowsky for tonejs-instruments,
+released under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  https://github.com/nbrosowsky/tonejs-instruments
+
+Files: C3 Ds3 Fs3 A3 C4 Ds4 Fs4 A4 C5 (unmodified copies)

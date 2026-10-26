@@ -96,8 +96,9 @@
   .stage-msg small { display: block; font-size: 14px; font-weight: 700; opacity: .8; }
 
   /* Instruments */
-  .instruments { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
-  @media (max-width: 760px) { .instruments { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .instruments { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  @media (max-width: 1000px) { .instruments { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .instruments { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
   .inst {
     border: 3px solid transparent; background: var(--panel); border-radius: 18px; padding: 8px 4px 6px; cursor: pointer;
     box-shadow: var(--shadow); display: grid; justify-items: center; gap: 2px; font-weight: 800; font-size: 13px;
@@ -144,6 +145,39 @@
   }
   .key.black.target::after { top: auto; bottom: 26px; font-size: 18px; }
   @keyframes hop { to { transform: translate(-50%, -8px) scale(1.15); } }
+  /* Drum kit */
+  .drumkit { display: grid; gap: 10px; user-select: none; -webkit-user-select: none; touch-action: none; }
+  .kit-row { display: grid; gap: 10px; align-items: end; }
+  .kit-cymbals { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .kit-drums { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kit-perc { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  @media (max-width: 600px) { .kit-perc { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .pad {
+    position: relative; border: 0; cursor: pointer; padding: 0; color: inherit; font: inherit;
+    display: grid; place-items: center; align-content: center; gap: 2px; font-weight: 800; font-size: 13px;
+    transition: transform .05s, filter .05s;
+  }
+  .pad .em { font-size: 28px; line-height: 1; pointer-events: none; }
+  .pad span { pointer-events: none; }
+  .pad.hit { transform: scale(.93); filter: brightness(1.15); }
+  .pad.cymbal, .pad.drum, .pad.perc { width: 100%; justify-self: center; }
+  .pad.cymbal { max-width: 210px; }
+  .pad.drum { max-width: 220px; }
+  .pad.perc { max-width: 120px; }
+  .pad.cymbal { aspect-ratio: 2.2 / 1; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #fff3b0 0 8%, #f5c542 9% 55%, #d9a417 56% 100%);
+    box-shadow: 0 6px 0 rgba(0,0,0,.15); color: #5a4300; }
+  .pad.drum { aspect-ratio: 1.25 / 1; border-radius: 50%;
+    background: radial-gradient(circle, #fbf8f0 0 58%, var(--pc) 60% 100%);
+    box-shadow: 0 8px 0 color-mix(in srgb, var(--pc) 70%, #000), inset 0 0 0 4px rgba(0,0,0,.08); color: #3a2f4f; }
+  .pad.kick { aspect-ratio: auto; height: 120px; width: min(260px, 70%); justify-self: center; border-radius: 50%;
+    background: radial-gradient(circle, #fbf8f0 0 50%, #ff4d5e 52% 100%); box-shadow: 0 8px 0 #b3253a; color: #3a2f4f; font-size: 16px; }
+  .pad.kick .em { font-size: 36px; }
+  .pad.perc { aspect-ratio: 1; border-radius: 22px; background: color-mix(in srgb, var(--pc) 28%, var(--white-key));
+    border-bottom: 8px solid var(--pc); color: var(--text); }
+  @media (max-width: 600px) { .pad { font-size: 11px; } .pad .em { font-size: 22px; } .pad.kick { height: 96px; } }
+  .pad .hint { position: absolute; top: 4px; right: 8px; font-size: 10px; opacity: .6; text-transform: uppercase; }
+  @media (pointer: coarse) { .pad .hint { display: none; } }
   .rotate-tip { display: none; text-align: center; color: var(--muted); font-size: 13px; margin-top: 8px; }
   @media (max-width: 600px) and (orientation: portrait) { .rotate-tip { display: block; } }
 
@@ -343,6 +377,12 @@
       </div>
     </div>
     <div class="keyboard" id="keyboard" aria-label="Piano keyboard"></div>
+    <div class="drumkit" id="drumkit" aria-label="Drum kit" hidden>
+      <div class="kit-row kit-cymbals" id="kitCymbals"></div>
+      <div class="kit-row kit-drums" id="kitDrums"></div>
+      <div class="kit-row" id="kitKick"></div>
+      <div class="kit-row kit-perc" id="kitPerc"></div>
+    </div>
     <div class="rotate-tip">📱 Turn your phone sideways for bigger keys</div>
   </div>
 
@@ -399,12 +439,14 @@
     <div class="row"><button class="btn small" id="installTipClose" type="button">Got it</button></div>
   </div>
 
-  <footer>Robot, Space and the drums are made live in your browser with the Web Audio API. 🎶<br>
+  <footer>Robot, Space and the Beat Maker's clap are made live in your browser with the Web Audio API. 🎶<br>
     Instrument recordings from <a href="https://github.com/nbrosowsky/tonejs-instruments">tonejs-instruments</a> by Nicholaus Brosowsky
     (<a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>), based on
     <a href="https://github.com/sgossner/VSCO-2-CE">VSCO 2 Community Edition</a> (CC0; piano, xylophone, flute, trumpet, organ),
-    the <a href="https://theremin.music.uiowa.edu/MIS.html">University of Iowa Musical Instrument Samples</a> (guitar)
-    and <a href="https://github.com/sfzinstruments/karoryfer.weresax">Weresax</a> by Karoryfer Samples (CC0; saxophone).</footer>
+    the <a href="https://theremin.music.uiowa.edu/MIS.html">University of Iowa Musical Instrument Samples</a> (guitar),
+    <a href="https://www.karoryfer.com/karoryfer-samples">Karoryfer Samples</a> (electric guitar)
+    and <a href="https://github.com/sfzinstruments/karoryfer.weresax">Weresax</a> by Karoryfer Samples (CC0; saxophone).
+    Drum kit: <a href="https://github.com/sfzinstruments/virtuosity_drums">Virtuosity Drums</a> (CC0).</footer>
 </div>
 
 <script>
@@ -539,6 +581,7 @@
     guitar: { gain: .7, rel: .5, shift: -12, files: { 48: ['C3', 6], 51: ['Ds3', 6], 54: ['Fs3', 6], 57: ['A3', -4], 60: ['C4', 0], 63: ['Ds4', -5], 66: ['Fs4', -4], 69: ['A4', 0], 72: ['C5', 0] } },
     flute: { gain: .45, rel: .15, hold: true, vib: 8, files: { 60: ['C4', 4], 64: ['E4', 0], 69: ['A4', 5], 72: ['C5', 0], 76: ['E5', 0], 81: ['A5', 0], 84: ['C6', 0] } },
     trumpet: { gain: .42, rel: .12, hold: true, vib: 10, files: { 57: ['A3', 0], 63: ['Ds4', 0], 65: ['F4', -6], 67: ['G4', 4], 74: ['D5', 0], 77: ['F5', -4], 81: ['A5', 0], 84: ['C6', 9] } },
+    eguitar: { gain: .55, rel: .4, shift: -12, drive: true, files: { 48: ['C3', 0], 51: ['Ds3', 4], 54: ['Fs3', 4], 57: ['A3', 0], 60: ['C4', 4], 63: ['Ds4', 0], 66: ['Fs4', 0], 69: ['A4', 0], 72: ['C5', 0] } },
     sax: { gain: .6, rel: .14, hold: true, vib: 16, shift: -12, files: { 50: ['D3', 0], 53: ['F3', 0], 56: ['Gs3', 0], 59: ['B3', 0], 62: ['D4', 0], 65: ['F4', 0], 68: ['Gs4', 0], 71: ['B4', 0], 74: ['D5', 0] } },
     organ: { gain: .5, rel: .1, hold: true, files: { 60: ['C4', 0], 63: ['Ds4', -6], 66: ['Fs4', 0], 69: ['A4', 0], 72: ['C5', 0], 75: ['Ds5', 0], 78: ['Fs5', 0], 81: ['A5', 4], 84: ['C6', 0] } },
   };
@@ -555,6 +598,19 @@
         new Promise((res) => ctx.decodeAudioData(ab, res, () => res(null))).then((b) => { if (b) cfg.bufs[m] = b; }))));
     }
   }
+  // A little amp "crunch" for the electric guitar: soft clipping, then a speaker-like filter
+  let driveCurve = null;
+  function amp(dest) {
+    if (!driveCurve) {
+      driveCurve = new Float32Array(1024);
+      for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; driveCurve[i] = Math.tanh(3.5 * x) / Math.tanh(3.5); }
+    }
+    const pre = ctx.createGain(), shaper = ctx.createWaveShaper(), cab = ctx.createBiquadFilter(), post = ctx.createGain();
+    pre.gain.value = 2.2; shaper.curve = driveCurve; shaper.oversample = '2x';
+    cab.type = 'lowpass'; cab.frequency.value = 4200; cab.Q.value = .7; post.gain.value = .55;
+    pre.connect(shaper); shaper.connect(cab); cab.connect(post); post.connect(dest);
+    return pre;
+  }
   function playSample(id, m, t) {
     const cfg = SAMPLES[id];
     loadSamples(id);
@@ -565,7 +621,7 @@
     src.buffer = cfg.bufs[near];
     const rate = Math.pow(2, (target - near + cfg.files[near][1] / 100) / 12);
     src.playbackRate.value = rate;
-    src.connect(v.out); src.start(t); v.srcs.push(src);
+    src.connect(cfg.drive ? amp(v.out) : v.out); src.start(t); v.srcs.push(src);
     if (cfg.vib) {
       // playbackRate (not detune) so it works in every browser
       const vib = vibrato(t, [[src.playbackRate, centsToRate(rate, cfg.vib)]], { rate: 5.2, delay: .45 });
@@ -630,6 +686,13 @@
       v.out.gain.setValueAtTime(.8, t);
       return v;
     } },
+    { id: 'eguitar', name: 'Electric', em: '🤘', color: '#ff4d5e', play(m, t) {
+      // fallback: plucked string through the amp
+      const v = voice(.12, .2), src = ctx.createBufferSource();
+      src.buffer = pluckBuffer(m - 12); src.connect(amp(v.out)); src.start(t); v.srcs.push(src);
+      v.out.gain.setValueAtTime(.8, t);
+      return v;
+    } },
     { id: 'flute', name: 'Flute', em: '🪈', color: '#2ec4b6', play(m, t) {
       const v = voice(.25, .15), f = hz(m + 12);
       const a = osc('sine', f, t, v.out), tri = ctx.createGain(); tri.gain.value = .12; tri.connect(v.out);
@@ -688,6 +751,8 @@
       v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.22, t + .25);
       return v;
     } },
+    // Drums: the keyboard becomes a drum kit. m is the pad number (see KIT).
+    { id: 'drums', name: 'Drums', em: '🥁', color: '#ff7a3d', kit: true, play(m, t) { hitDrum(KIT[m]?.id, t); return { release() {}, srcs: [] }; } },
   ];
   // Recorded instruments play their recordings once loaded; the synth sounds above are the fallback
   INSTRUMENTS.forEach((it) => {
@@ -733,6 +798,57 @@
       osc('square', 545, t, f).stop(t + .4); osc('square', 815, t, f).stop(t + .4);
     } },
   ];
+
+  // ---------- Drum kit: real recordings (see sounds/drums/CREDITS.txt) ----------
+  //   row: where the pad sits; key: computer key; synth: synthesized stand-in used until the recordings load
+  const KIT = [
+    { id: 'crash', name: 'Crash', em: '💫', row: 'kitCymbals', type: 'cymbal', key: 'q', gain: .45, synth: 'hat' },
+    { id: 'hhclosed', name: 'Hi-hat', em: '🎩', row: 'kitCymbals', type: 'cymbal', key: 'w', gain: .55, synth: 'hat' },
+    { id: 'hhopen', name: 'Open hat', em: '🌟', row: 'kitCymbals', type: 'cymbal', key: 'e', gain: .5, synth: 'hat' },
+    { id: 'ride', name: 'Ride', em: '🛸', row: 'kitCymbals', type: 'cymbal', key: 'r', gain: 1.2, synth: 'hat' },
+    { id: 'tomhigh', name: 'Tom', em: '🔵', row: 'kitDrums', type: 'drum', color: '#3fa7ff', key: 'a', gain: .8, synth: 'kick' },
+    { id: 'snare', name: 'Snare', em: '🥁', row: 'kitDrums', type: 'drum', color: '#b15cff', key: 's', gain: .8, synth: 'snare' },
+    { id: 'tomfloor', name: 'Floor tom', em: '🟢', row: 'kitDrums', type: 'drum', color: '#5cc46f', key: 'd', gain: .85, synth: 'kick' },
+    { id: 'kick', name: 'Kick', em: '💥', row: 'kitKick', type: 'kick', key: ' ', keyLabel: 'space', gain: .9, synth: 'kick' },
+    { id: 'tambourine', name: 'Tambourine', em: '✨', row: 'kitPerc', type: 'perc', color: '#ffb703', key: 'z', gain: .6, synth: 'hat' },
+    { id: 'cowbell', name: 'Cowbell', em: '🐮', row: 'kitPerc', type: 'perc', color: '#b15cff', key: 'x', gain: .55, synth: 'cow' },
+    { id: 'triangle', name: 'Triangle', em: '🔺', row: 'kitPerc', type: 'perc', color: '#3fa7ff', key: 'c', gain: .7, synth: 'hat' },
+    { id: 'shaker', name: 'Shaker', em: '🥚', row: 'kitPerc', type: 'perc', color: '#5cc46f', key: 'v', gain: .6, synth: 'hat' },
+    { id: 'woodblock', name: 'Woodblock', em: '🪵', row: 'kitPerc', type: 'perc', color: '#e0662f', key: 'b', gain: .6, synth: 'cow' },
+    { id: 'bongohigh', name: 'Bongo hi', em: '🪘', row: 'kitPerc', type: 'perc', color: '#ff5dbb', key: 'n', gain: .7, synth: 'kick' },
+    { id: 'bongolow', name: 'Bongo lo', em: '🪘', row: 'kitPerc', type: 'perc', color: '#ff4d5e', key: 'm', gain: .7, synth: 'kick' },
+  ];
+  const KIT_BY_ID = Object.fromEntries(KIT.map((d, i) => [d.id, { ...d, idx: i }]));
+  const KIT_KEYS = Object.fromEntries(KIT.map((d, i) => [d.key, i]));
+  const drumBufs = {};
+  let drumFetch = null, drumDecode = null, openHat = null;
+  function loadDrums() {
+    if (!drumFetch) {
+      drumFetch = Promise.all(KIT.map((d) =>
+        fetch(`sounds/drums/${d.id}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null).then((ab) => [d.id, ab])));
+    }
+    if (ctx && !drumDecode) {
+      drumDecode = drumFetch.then((list) => Promise.all(list.filter(([, ab]) => ab).map(([id, ab]) =>
+        new Promise((res) => ctx.decodeAudioData(ab, res, () => res(null))).then((b) => { if (b) drumBufs[id] = b; }))));
+    }
+  }
+  function hitDrum(id, t, vel = 1) {
+    const d = KIT_BY_ID[id];
+    if (!d) return;
+    loadDrums();
+    if (id === 'hhclosed' && openHat) { try { openHat.g.gain.setTargetAtTime(0, t, .02); } catch (e) {} openHat = null; } // closing the hi-hat stops it ringing
+    const buf = drumBufs[id];
+    if (!buf) { DRUMS.find((x) => x.id === d.synth).play(t, vel); return; }
+    const src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = buf; g.gain.value = d.gain * vel;
+    src.connect(g); g.connect(master);
+    const wet = ctx.createGain(); wet.gain.value = .08; g.connect(wet); wet.connect(reverbIn);
+    src.start(t);
+    src.onended = () => g.disconnect();
+    if (id === 'hhopen') openHat = { g };
+  }
+  // The Beat Maker uses the real kit for the sounds it has
+  const BEAT_TO_KIT = { kick: 'kick', snare: 'snare', hat: 'hhclosed', cow: 'cowbell' };
 
   // ---------- Floating notes on the stage ----------
   const canvas = $('fx'), g2d = canvas.getContext('2d');
@@ -859,6 +975,11 @@
   document.addEventListener('keydown', (e) => {
     if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.target.matches('input') || $('bigMode').hidden) return;
     const k = e.key.toLowerCase();
+    if (inst.kit) {
+      // space on a focused button should still press that button, except on the pads themselves
+      if (KIT_KEYS[k] != null && !(k === ' ' && e.target.matches('button:not(.pad)'))) { e.preventDefault(); hitPad(KIT_KEYS[k]); }
+      return;
+    }
     if (KEYMAP[k] != null) { e.preventDefault(); noteOn(KEYMAP[k], 'k' + k); }
   });
   document.addEventListener('keyup', (e) => {
@@ -879,16 +1000,60 @@
       b.addEventListener('click', () => {
         selectInst(it);
         audio();
-        it.play(72, ctx.currentTime).release(ctx.currentTime + .35);
+        if (it.kit) { hitDrum('snare', ctx.currentTime); hitDrum('kick', ctx.currentTime); }
+        else it.play(72, ctx.currentTime).release(ctx.currentTime + .35);
         burst(.5, it.color);
       });
       box.appendChild(b);
       it.btn = b;
     });
   }
+  const padEls = [];
+  function buildKit() {
+    KIT.forEach((d, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pad ' + d.type; b.dataset.i = i;
+      if (d.color) b.style.setProperty('--pc', d.color);
+      b.innerHTML = `<span class="em">${d.em}</span><span></span><span class="hint"></span>`;
+      b.children[1].textContent = d.name;
+      b.querySelector('.hint').textContent = d.keyLabel || d.key;
+      b.setAttribute('aria-label', d.name);
+      $(d.row).appendChild(b);
+      padEls[i] = b;
+    });
+    $('drumkit').addEventListener('pointerdown', (e) => {
+      const b = e.target.closest('.pad');
+      if (!b) return;
+      e.preventDefault();
+      hitPad(+b.dataset.i);
+    });
+    $('drumkit').addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+  }
+  function flashPad(i) {
+    const b = padEls[i];
+    if (!b) return;
+    b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit');
+    setTimeout(() => b.classList.remove('hit'), 110);
+    const r = b.getBoundingClientRect(), k = $('drumkit').getBoundingClientRect();
+    burst((r.left + r.width / 2 - k.left) / k.width, KIT[i].color || '#f5b700');
+  }
+  function hitPad(i) {
+    audio();
+    hitDrum(KIT[i].id, ctx.currentTime);
+    flashPad(i);
+    if (!greeted && !game.song) { greeted = true; say(''); }
+    if (rec.state === 'recording') rec.notes.push({ m: i, inst: 'drums', t: performance.now() - rec.start, d: .2 });
+  }
+  let lastMelodic = null;
   function selectInst(it) {
     inst = it;
+    if (!it.kit) lastMelodic = it;
     loadSamples(it.id);
+    if (it.kit) loadDrums();
+    $('keyboard').hidden = !!it.kit;
+    $('drumkit').hidden = !it.kit;
+    document.querySelector('.kb-top .row').style.visibility = it.kit ? 'hidden' : '';
+    if (it.kit && game.song) stopSong(); // songs are played on the keys
     INSTRUMENTS.forEach((x) => x.btn.setAttribute('aria-pressed', String(x === it)));
     $('nowInst').textContent = `${it.em} ${it.name}`;
     try { localStorage.setItem('tt-inst', it.id); } catch (e) {}
@@ -987,6 +1152,7 @@
   const beat = { on: false, bpm: 100, step: 0, next: 0, timer: null, queue: [] };
   function toggleBeat() {
     audio();
+    loadDrums();
     beat.on = !beat.on;
     $('beatPlay').textContent = beat.on ? '⏸ Stop beat' : '▶ Play beat';
     if (beat.on) {
@@ -1003,7 +1169,11 @@
     const stepDur = 60 / beat.bpm / 4;
     if (beat.next < ctx.currentTime) beat.next = ctx.currentTime + .02; // tab was asleep
     while (beat.next < ctx.currentTime + .12) {
-      DRUMS.forEach((d, r) => { if (pattern[r][beat.step]) d.play(beat.next, beat.step % 4 === 0 ? 1 : .8); });
+      DRUMS.forEach((d, r) => {
+        if (!pattern[r][beat.step]) return;
+        const vel = beat.step % 4 === 0 ? 1 : .8, k = BEAT_TO_KIT[d.id];
+        if (k && drumBufs[k]) hitDrum(k, beat.next, vel); else d.play(beat.next, vel);
+      });
       beat.queue.push({ step: beat.step, time: beat.next });
       beat.step = (beat.step + 1) % STEPS;
       beat.next += stepDur;
@@ -1073,6 +1243,7 @@
       const v = n.inst.play(n.m, at); v.release(at + n.d);
       handles.push(v);
       const delay = (at - ctx.currentTime) * 1000;
+      if (n.inst.kit) { handles.push(setTimeout(() => flashPad(n.m), delay)); end = Math.max(end, delay + 200); return; }
       handles.push(setTimeout(() => { keyEls[n.m].classList.add('down'); burst(kbPos(n.m), COLORS[n.m % 12]); }, delay));
       handles.push(setTimeout(() => { if (!isHeld(n.m)) keyEls[n.m].classList.remove('down'); }, delay + n.d * 1000));
       end = Math.max(end, delay + n.d * 1000);
@@ -1135,6 +1306,7 @@
   }
   function startSong(s) {
     stopListen();
+    if (inst.kit) selectInst(lastMelodic || INSTRUMENTS[0]);
     game.song = s; game.idx = 0;
     SONGS.forEach((x) => x.btn.setAttribute('aria-pressed', String(x === s)));
     $('songListen').disabled = false; $('songRestart').disabled = false;
@@ -1597,6 +1769,7 @@
   // ---------- Start ----------
   buildInstruments();
   buildKeyboard();
+  buildKit();
   buildBeatGrid();
   buildSongs();
   selectInst(INSTRUMENTS[0]);
