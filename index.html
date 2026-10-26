@@ -399,10 +399,12 @@
     <div class="row"><button class="btn small" id="installTipClose" type="button">Got it</button></div>
   </div>
 
-  <footer>Sounds are made live in your browser with the Web Audio API. 🎶<br>
-    Saxophone recordings: <a href="https://github.com/sfzinstruments/karoryfer.weresax">Weresax</a> by Karoryfer Samples (CC0),
-    edited by Nicholaus Brosowsky for <a href="https://github.com/nbrosowsky/tonejs-instruments">tonejs-instruments</a>
-    (<a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>).</footer>
+  <footer>Robot, Space and the drums are made live in your browser with the Web Audio API. 🎶<br>
+    Instrument recordings from <a href="https://github.com/nbrosowsky/tonejs-instruments">tonejs-instruments</a> by Nicholaus Brosowsky
+    (<a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>), based on
+    <a href="https://github.com/sgossner/VSCO-2-CE">VSCO 2 Community Edition</a> (CC0; piano, xylophone, flute, trumpet, organ),
+    the <a href="https://theremin.music.uiowa.edu/MIS.html">University of Iowa Musical Instrument Samples</a> (guitar)
+    and <a href="https://github.com/sfzinstruments/karoryfer.weresax">Weresax</a> by Karoryfer Samples (CC0; saxophone).</footer>
 </div>
 
 <script>
@@ -466,6 +468,8 @@
       for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     }
     if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    loadSamples(inst.id);
+    loadSamples(L.inst.id); // audio() only runs from user events, after everything is set up
     return ctx;
   }
 
@@ -523,22 +527,59 @@
   }
   const centsToRate = (rate, cents) => rate * (Math.pow(2, cents / 1200) - 1);
 
-  // Saxophone recordings (see sounds/sax/CREDITS.txt), loaded only when the sax is chosen
-  const SAX_FILES = { 50: 'D3', 53: 'F3', 56: 'Gs3', 59: 'B3', 62: 'D4', 65: 'F4', 68: 'Gs4', 71: 'B4', 74: 'D5' };
-  const saxBufs = {};
-  let saxFetch = null, saxDecode = null;
-  function loadSax() {
-    if (!saxFetch) {
-      saxFetch = Promise.all(Object.entries(SAX_FILES).map(([m, n]) =>
-        fetch(`sounds/sax/${n}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((ab) => [+m, ab]).catch(() => [+m, null])));
+  // ---------- Recorded instruments (see sounds/*/CREDITS.txt) ----------
+  // A few real notes per instrument, re-pitched to the nearest key. Each instrument loads when it's chosen;
+  // until then (or offline before its first load) it falls back to its synthesized sound.
+  //   files: sample pitch -> [file name, tuning fix in cents]; shift: octave the keys play in;
+  //   gain evens out loudness; hold: true for sounds that last while a key is held (fade before the file ends);
+  //   rel: release time; vib: vibrato depth in cents (0 = none)
+  const SAMPLES = {
+    piano: { gain: .55, rel: .35, files: { 60: ['C4', 0], 63: ['Ds4', 0], 66: ['Fs4', 0], 69: ['A4', 0], 72: ['C5', 0], 75: ['Ds5', 0], 78: ['Fs5', 0], 81: ['A5', 0], 84: ['C6', -5] } },
+    xylo: { gain: 1, rel: .3, shift: 12, files: { 67: ['G4', -13], 72: ['C5', -12], 79: ['G5', -14], 84: ['C6', -15], 91: ['G6', -16], 96: ['C7', -17], 103: ['G7', -18], 108: ['C8', -18] } },
+    guitar: { gain: .7, rel: .5, shift: -12, files: { 48: ['C3', 6], 51: ['Ds3', 6], 54: ['Fs3', 6], 57: ['A3', -4], 60: ['C4', 0], 63: ['Ds4', -5], 66: ['Fs4', -4], 69: ['A4', 0], 72: ['C5', 0] } },
+    flute: { gain: .45, rel: .15, hold: true, vib: 8, files: { 60: ['C4', 4], 64: ['E4', 0], 69: ['A4', 5], 72: ['C5', 0], 76: ['E5', 0], 81: ['A5', 0], 84: ['C6', 0] } },
+    trumpet: { gain: .42, rel: .12, hold: true, vib: 10, files: { 57: ['A3', 0], 63: ['Ds4', 0], 65: ['F4', -6], 67: ['G4', 4], 74: ['D5', 0], 77: ['F5', -4], 81: ['A5', 0], 84: ['C6', 9] } },
+    sax: { gain: .6, rel: .14, hold: true, vib: 16, shift: -12, files: { 50: ['D3', 0], 53: ['F3', 0], 56: ['Gs3', 0], 59: ['B3', 0], 62: ['D4', 0], 65: ['F4', 0], 68: ['Gs4', 0], 71: ['B4', 0], 74: ['D5', 0] } },
+    organ: { gain: .5, rel: .1, hold: true, files: { 60: ['C4', 0], 63: ['Ds4', -6], 66: ['Fs4', 0], 69: ['A4', 0], 72: ['C5', 0], 75: ['Ds5', 0], 78: ['Fs5', 0], 81: ['A5', 4], 84: ['C6', 0] } },
+  };
+  for (const cfg of Object.values(SAMPLES)) { cfg.bufs = {}; cfg.fetching = null; cfg.decoding = null; }
+  function loadSamples(id) {
+    const cfg = SAMPLES[id];
+    if (!cfg) return;
+    if (!cfg.fetching) {
+      cfg.fetching = Promise.all(Object.entries(cfg.files).map(([m, [name]]) =>
+        fetch(`sounds/${id}/${name}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).catch(() => null).then((ab) => [+m, ab])));
     }
-    return saxFetch;
+    if (ctx && !cfg.decoding) {
+      cfg.decoding = cfg.fetching.then((list) => Promise.all(list.filter(([, ab]) => ab).map(([m, ab]) =>
+        new Promise((res) => ctx.decodeAudioData(ab, res, () => res(null))).then((b) => { if (b) cfg.bufs[m] = b; }))));
+    }
   }
-  function decodeSax() {
-    if (saxDecode || !ctx) return;
-    saxDecode = loadSax().then((list) => Promise.all(list.filter(([, ab]) => ab).map(([m, ab]) =>
-      new Promise((res) => ctx.decodeAudioData(ab, res, () => res(null))).then((b) => { if (b) saxBufs[m] = b; }))));
+  function playSample(id, m, t) {
+    const cfg = SAMPLES[id];
+    loadSamples(id);
+    const target = m + (cfg.shift || 0);
+    const near = Object.keys(cfg.bufs).map(Number).sort((a, b) => Math.abs(a - target) - Math.abs(b - target))[0];
+    if (near == null || Math.abs(near - target) > 4) return null;
+    const v = voice(.18, cfg.rel), src = ctx.createBufferSource();
+    src.buffer = cfg.bufs[near];
+    const rate = Math.pow(2, (target - near + cfg.files[near][1] / 100) / 12);
+    src.playbackRate.value = rate;
+    src.connect(v.out); src.start(t); v.srcs.push(src);
+    if (cfg.vib) {
+      // playbackRate (not detune) so it works in every browser
+      const vib = vibrato(t, [[src.playbackRate, centsToRate(rate, cfg.vib)]], { rate: 5.2, delay: .45 });
+      if (vib) v.srcs.push(vib);
+    }
+    v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(cfg.gain, t + .008);
+    if (cfg.hold) {
+      // fade out before the recording runs out, so a long hold ends smoothly
+      const len = src.buffer.duration / rate;
+      v.out.gain.setValueAtTime(cfg.gain, t + len - .6); v.out.gain.linearRampToValueAtTime(0, t + len - .05);
+    }
+    return v;
   }
+
   // synthesized fallback: reedy saw+square through a resonant "body" filter, with a little scoop up into the note
   function saxSynth(m, t) {
     const v = voice(.22, .12), f = hz(m - 12);
@@ -615,25 +656,7 @@
       v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.32, t + .04); v.out.gain.setTargetAtTime(.25, t + .04, .15);
       return v;
     } },
-    { id: 'sax', name: 'Saxophone', em: '🎷', color: '#d98e04', play(m, t) {
-      // real saxophone recordings, gently re-pitched to the nearest note; synth until they've loaded
-      const target = m - 12;
-      decodeSax();
-      const near = Object.keys(saxBufs).map(Number).sort((a, b) => Math.abs(a - target) - Math.abs(b - target))[0];
-      if (near == null || Math.abs(near - target) > 3) return saxSynth(m, t);
-      const v = voice(.18, .14), src = ctx.createBufferSource();
-      src.buffer = saxBufs[near];
-      const rate = Math.pow(2, (target - near) / 12);
-      src.playbackRate.value = rate;
-      src.connect(v.out); src.start(t); v.srcs.push(src);
-      const vib = vibrato(t, [[src.playbackRate, centsToRate(rate, 16)]], { rate: 5.2, delay: .45 });
-      if (vib) v.srcs.push(vib);
-      v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.6, t + .012);
-      // fade out before the recording runs out, so a long hold ends smoothly
-      const len = src.buffer.duration / src.playbackRate.value;
-      v.out.gain.setValueAtTime(.6, t + len - .6); v.out.gain.linearRampToValueAtTime(0, t + len - .05);
-      return v;
-    } },
+    { id: 'sax', name: 'Saxophone', em: '🎷', color: '#d98e04', play: saxSynth },
     { id: 'organ', name: 'Organ', em: '⛪', color: '#7b61ff', play(m, t) {
       const v = voice(.2, .08), f = hz(m);
       [[1, .5], [2, .35], [3, .2], [4, .14], [.5, .25]].forEach(([h, gv]) => {
@@ -666,6 +689,12 @@
       return v;
     } },
   ];
+  // Recorded instruments play their recordings once loaded; the synth sounds above are the fallback
+  INSTRUMENTS.forEach((it) => {
+    if (!SAMPLES[it.id]) return;
+    const synth = it.play;
+    it.play = (m, t) => playSample(it.id, m, t) || synth(m, t);
+  });
   let inst = INSTRUMENTS[0];
 
   // ---------- Drums ----------
@@ -859,7 +888,7 @@
   }
   function selectInst(it) {
     inst = it;
-    if (it.id === 'sax') { loadSax(); decodeSax(); }
+    loadSamples(it.id);
     INSTRUMENTS.forEach((x) => x.btn.setAttribute('aria-pressed', String(x === it)));
     $('nowInst').textContent = `${it.em} ${it.name}`;
     try { localStorage.setItem('tt-inst', it.id); } catch (e) {}
@@ -1271,7 +1300,7 @@
       b.type = 'button'; b.className = 'act mini'; b.textContent = it.em;
       b.title = it.name; b.setAttribute('aria-label', it.name);
       b.addEventListener('click', () => {
-        L.inst = it; audio();
+        L.inst = it; audio(); loadSamples(it.id);
         it.play(67, ctx.currentTime).release(ctx.currentTime + .3);
         [...$('lSounds').children].forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       });

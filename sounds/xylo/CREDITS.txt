@@ -1,0 +1,9 @@
+xylo recordings
+
+Source: VSCO 2 Community Edition by Versilian Studios, released under CC0 1.0
+  https://github.com/sgossner/VSCO-2-CE
+Edited (trimmed, normalized, volume-matched) by Nicholaus P. Brosowsky for tonejs-instruments,
+released under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/)
+  https://github.com/nbrosowsky/tonejs-instruments
+
+Files: C5 C6 C7 C8 G4 G5 G6 G7 

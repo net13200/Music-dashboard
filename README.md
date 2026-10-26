@@ -14,7 +14,7 @@ No reading or words needed. Everything is shown with pictures, motion and sound.
 ## 🎹 Big Keyboard
 
 - 🎹 **Two-octave keyboard** (C4–C6) with rainbow keys. Works with touch (several fingers at once, slide across keys), mouse, or the computer keyboard (Z row = low octave, Q row = high octave)
-- 🎺 **9 instruments**: piano, xylophone, guitar, flute, trumpet, saxophone, organ, robot, space
+- 🎺 **9 instruments**: piano, xylophone, guitar, flute, trumpet, saxophone and organ use real recordings (see `sounds/*/CREDITS.txt`); robot and space are synthesized
 - 🥁 **Beat maker**: 16-step drum grid with 5 sounds, 12 ready-made beats, and pace controls (Slow / Walk / Run / Zoom, a slider, and − / + buttons)
 - ⏺️ **Recorder**: record a tune and play it back (saved in your browser)
 - ⭐ **Learn a song**: follow the glowing star to play Twinkle Twinkle, Mary Had a Little Lamb, Ode to Joy, Jingle Bells, Happy Birthday and Old MacDonald
