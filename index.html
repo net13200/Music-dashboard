@@ -74,6 +74,7 @@
   @keyframes bob { 50% { transform: translateY(-4px) rotate(-6deg); } }
   .sub { margin: 2px 0 0; color: var(--muted); }
   .head-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pill[aria-pressed="true"] { border-color: var(--accent); }
   .pill {
     border: 2px solid var(--line); background: var(--panel); border-radius: 999px; padding: 6px 12px;
     cursor: pointer; font-size: 14px; font-weight: 700; box-shadow: var(--shadow);
@@ -332,6 +333,7 @@
     <div class="kb-top">
       <div class="now" id="nowInst">🎹 Piano</div>
       <div class="row">
+        <button class="pill" id="vibBtn" type="button" aria-pressed="true" title="Wobble the pitch on long notes (sax, flute, trumpet, space)">〰️ Vibrato</button>
         <span class="muted">Key names</span>
         <div class="seg" id="labelSeg" role="group" aria-label="Key names">
           <button type="button" data-mode="abc" aria-pressed="true">C D E</button>
@@ -507,6 +509,20 @@
     return (pluckCache[m] = b);
   }
 
+  // Vibrato for held notes: a small pitch wobble that only fades in after a moment, like a real player.
+  // targets: [[AudioParam, amount]] where amount is the swing in that param's units (cents for detune).
+  let vibratoOn = true;
+  function vibrato(t, targets, { rate = 5.5, delay = .35, fade = .6 } = {}) {
+    if (!vibratoOn) return null;
+    const lfo = ctx.createOscillator(), depth = ctx.createGain();
+    lfo.frequency.value = rate * (.96 + Math.random() * .08);
+    depth.gain.setValueAtTime(0, t + delay); depth.gain.linearRampToValueAtTime(1, t + delay + fade);
+    lfo.connect(depth); lfo.start(t);
+    targets.forEach(([param, amount]) => { const g = ctx.createGain(); g.gain.value = amount; depth.connect(g); g.connect(param); });
+    return lfo;
+  }
+  const centsToRate = (rate, cents) => rate * (Math.pow(2, cents / 1200) - 1);
+
   // Saxophone recordings (see sounds/sax/CREDITS.txt), loaded only when the sax is chosen
   const SAX_FILES = { 50: 'D3', 53: 'F3', 56: 'Gs3', 59: 'B3', 62: 'D4', 65: 'F4', 68: 'Gs4', 71: 'B4', 74: 'D5' };
   const saxBufs = {};
@@ -533,15 +549,14 @@
     bp.connect(lp); lp.connect(v.out);
     const sq = ctx.createGain(); sq.gain.value = .5; sq.connect(bp);
     const a = osc('sawtooth', f, t, bp), b = osc('square', f, t, sq, 4);
-    const lfo = ctx.createOscillator(), lg = ctx.createGain();
-    lfo.frequency.value = 5.2; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(0, t + .25); lg.gain.linearRampToValueAtTime(14, t + .7);
-    lfo.connect(lg); lfo.start(t);
-    [a, b].forEach((o) => { o.detune.setValueAtTime(-40, t); o.detune.linearRampToValueAtTime(0, t + .07); lg.connect(o.detune); });
+    [a, b].forEach((o) => { o.detune.setValueAtTime(-40, t); o.detune.linearRampToValueAtTime(0, t + .07); });
+    const vib = vibrato(t, [[a.detune, 14], [b.detune, 14]], { rate: 5.2, delay: .3 });
+    if (vib) v.srcs.push(vib);
     const nf = ctx.createBiquadFilter(), ng = ctx.createGain();
     nf.type = 'bandpass'; nf.frequency.value = 2500; nf.Q.value = 1;
     ng.gain.setValueAtTime(.12, t); ng.gain.setTargetAtTime(.025, t + .04, .08);
     nf.connect(ng); ng.connect(v.out);
-    v.srcs.push(a, b, lfo, noise(t, t + 30, nf));
+    v.srcs.push(a, b, noise(t, t + 30, nf));
     v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.3, t + .05); v.out.gain.setTargetAtTime(.24, t + .05, .2);
     return v;
   }
@@ -576,17 +591,15 @@
     } },
     { id: 'flute', name: 'Flute', em: '🪈', color: '#2ec4b6', play(m, t) {
       const v = voice(.25, .15), f = hz(m + 12);
-      const lfo = ctx.createOscillator(), lg = ctx.createGain();
-      lfo.frequency.value = 5; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(10, t + .5);
-      lfo.connect(lg); lfo.start(t);
       const a = osc('sine', f, t, v.out), tri = ctx.createGain(); tri.gain.value = .12; tri.connect(v.out);
       const b = osc('triangle', f, t, tri);
-      lg.connect(a.detune); lg.connect(b.detune);
+      const vib = vibrato(t, [[a.detune, 12], [b.detune, 12]], { rate: 5, delay: .3 });
+      if (vib) v.srcs.push(vib);
       const bf = ctx.createBiquadFilter(), bg = ctx.createGain();
       bf.type = 'bandpass'; bf.frequency.value = f * 2; bf.Q.value = 2;
       bg.gain.setValueAtTime(.18, t); bg.gain.setTargetAtTime(.03, t + .05, .1);
       bf.connect(bg); bg.connect(v.out);
-      v.srcs.push(a, b, lfo, noise(t, t + 30, bf));
+      v.srcs.push(a, b, noise(t, t + 30, bf));
       v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.45, t + .07);
       return v;
     } },
@@ -595,7 +608,10 @@
       lp.type = 'lowpass'; lp.Q.value = 2;
       lp.frequency.setValueAtTime(500, t); lp.frequency.linearRampToValueAtTime(3200, t + .06); lp.frequency.setTargetAtTime(2000, t + .06, .2);
       lp.connect(v.out);
-      v.srcs.push(osc('sawtooth', f, t, lp, -5), osc('sawtooth', f, t, lp, 5));
+      const a = osc('sawtooth', f, t, lp, -5), b = osc('sawtooth', f, t, lp, 5);
+      v.srcs.push(a, b);
+      const vib = vibrato(t, [[a.detune, 14], [b.detune, 14]], { rate: 5.8, delay: .4 });
+      if (vib) v.srcs.push(vib);
       v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.32, t + .04); v.out.gain.setTargetAtTime(.25, t + .04, .15);
       return v;
     } },
@@ -607,8 +623,11 @@
       if (near == null || Math.abs(near - target) > 3) return saxSynth(m, t);
       const v = voice(.18, .14), src = ctx.createBufferSource();
       src.buffer = saxBufs[near];
-      src.playbackRate.value = Math.pow(2, (target - near) / 12);
+      const rate = Math.pow(2, (target - near) / 12);
+      src.playbackRate.value = rate;
       src.connect(v.out); src.start(t); v.srcs.push(src);
+      const vib = vibrato(t, [[src.playbackRate, centsToRate(rate, 16)]], { rate: 5.2, delay: .45 });
+      if (vib) v.srcs.push(vib);
       v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.6, t + .012);
       // fade out before the recording runs out, so a long hold ends smoothly
       const len = src.buffer.duration / src.playbackRate.value;
@@ -639,7 +658,10 @@
       lp.type = 'lowpass'; lp.Q.value = 6; lp.frequency.value = 1400; lp.connect(v.out);
       const lfo = ctx.createOscillator(), lg = ctx.createGain();
       lfo.frequency.value = .7; lg.gain.value = 900; lfo.connect(lg); lg.connect(lp.frequency); lfo.start(t);
-      v.srcs.push(osc('sawtooth', f, t, lp, -14), osc('sawtooth', f, t, lp, 14), osc('sine', f / 2, t, v.out), lfo);
+      const a = osc('sawtooth', f, t, lp, -14), b = osc('sawtooth', f, t, lp, 14), sub = osc('sine', f / 2, t, v.out);
+      v.srcs.push(a, b, sub, lfo);
+      const vib = vibrato(t, [[a.detune, 10], [b.detune, 10], [sub.detune, 10]], { rate: 4, delay: .5, fade: 1 });
+      if (vib) v.srcs.push(vib);
       v.out.gain.setValueAtTime(0, t); v.out.gain.linearRampToValueAtTime(.22, t + .25);
       return v;
     } },
@@ -1160,6 +1182,15 @@
   $('slower').addEventListener('click', () => setPace(beat.bpm - 5));
   $('faster').addEventListener('click', () => setPace(beat.bpm + 5));
   $('vol').addEventListener('input', (e) => { if (master) master.gain.setTargetAtTime(+e.target.value / 100 * .9, ctx.currentTime, .02); });
+  function setVibrato(on) {
+    vibratoOn = on;
+    $('vibBtn').setAttribute('aria-pressed', String(on));
+    $('vibBtn').textContent = on ? '〰️ Vibrato on' : '➖ Vibrato off';
+  }
+  $('vibBtn').addEventListener('click', () => {
+    setVibrato(!vibratoOn);
+    try { localStorage.setItem('tt-vibrato', vibratoOn ? '1' : '0'); } catch (e) {}
+  });
   function setLabels(mode) {
     labelMode = mode;
     [...$('labelSeg').children].forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.mode === mode)));
@@ -1233,7 +1264,7 @@
     const listen = document.createElement('button');
     listen.type = 'button'; listen.className = 'act mini'; listen.textContent = '👂'; listen.id = 'lListen';
     listen.title = 'Listen first'; listen.setAttribute('aria-label', 'Listen first');
-    listen.addEventListener('click', () => { audio(); if (L.song) demo(L.song.seq.map((x) => x.m), L.song.seq.map((x) => x.b * 60 / L.song.bpm), () => setTarget(L.seq[L.idx])); });
+    listen.addEventListener('click', () => { audio(); if (L.song) demo(L.song.seq.map((x) => x.m), L.song.seq.map((x) => x.b * 60 / L.song.bpm), () => lSetTarget(L.seq[L.idx])); });
     $('lSongs').appendChild(listen);
     LSOUNDS.forEach((it) => {
       const b = document.createElement('button');
@@ -1316,7 +1347,7 @@
   }
 
   function clearTimers() { L.timers.forEach(clearTimeout); L.timers = []; }
-  function setTarget(m) {
+  function lSetTarget(m) {
     Object.values(lKeyEls).forEach((k) => k.classList.remove('target', 'hint'));
     if (m != null) lKeyEls[m].classList.add('target');
     L.wrong = 0;
@@ -1335,7 +1366,7 @@
     $('lAgain').hidden = true;
     [...$('lActs').children].forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.act === act)));
     $('lSongs').hidden = act !== 'songs';
-    setTarget(null); progress(0);
+    lSetTarget(null); progress(0);
     try { localStorage.setItem('tt-lact', act); } catch (e) {}
     if (act === 'free') {
       L.seq = [];
@@ -1356,7 +1387,7 @@
     } else if (act === 'stairs') {
       L.seq = [60, 62, 64, 65, 67, 65, 64, 62, 60];
       bubble('🪜');
-      setTarget(L.seq[0]);
+      lSetTarget(L.seq[0]);
     } else if (act === 'copy') {
       L.seq = [];
       nextCopyRound();
@@ -1366,13 +1397,13 @@
       L.song = song;
       L.seq = song.seq.map((x) => x.m);
       bubble(song.em);
-      setTarget(L.seq[0]);
+      lSetTarget(L.seq[0]);
     }
   }
   function showFind() {
     const m = L.seq[L.idx];
     bubble(ANIMAL[m]);
-    setTarget(m);
+    lSetTarget(m);
   }
 
   // Copy me: rounds grow from 1 to 3 notes
@@ -1386,7 +1417,7 @@
     playCopyDemo();
   }
   function playCopyDemo() {
-    setTarget(null);
+    lSetTarget(null);
     bubble('👀');
     L.timers.push(setTimeout(() => demo(L.seq, L.seq.map(() => .7), () => { bubble('👆'); }), 700));
   }
@@ -1394,7 +1425,7 @@
   function demo(notes, durs, after) {
     L.busy = true;
     $('lKeys').classList.add('locked');
-    setTarget(null);
+    lSetTarget(null);
     let t = 0;
     notes.forEach((m, i) => {
       L.timers.push(setTimeout(() => sing(m, durs[i] * .85), t * 1000));
@@ -1429,8 +1460,8 @@
       }
       progress(L.idx / L.seq.length);
       if (L.idx >= L.seq.length) return finish();
-      if (L.act === 'find') { confettiSmall(m); L.timers.push(setTimeout(showFind, 500)); setTarget(null); }
-      else setTarget(L.seq[L.idx]);
+      if (L.act === 'find') { confettiSmall(m); L.timers.push(setTimeout(showFind, 500)); lSetTarget(null); }
+      else lSetTarget(L.seq[L.idx]);
     } else {
       anim(lAnimalEls[m], 'wiggle');
       if (L.act === 'copy') {
@@ -1447,7 +1478,7 @@
   function confettiSmall(m) { floaty(m, '⭐'); floaty(m, '✨'); }
 
   function finish() {
-    setTarget(null);
+    lSetTarget(null);
     progress(1);
     const st = STICKERS[Math.floor(Math.random() * STICKERS.length)];
     L.stickers.push(st);
@@ -1558,6 +1589,9 @@
   try { savedBpm = +localStorage.getItem('tt-bpm'); } catch (e) {}
   setPace(savedBpm || 100);
   setRecUI();
+  let savedVib = null;
+  try { savedVib = localStorage.getItem('tt-vibrato'); } catch (e) {}
+  setVibrato(savedVib !== '0');
   buildLittle();
   try {
     const st = JSON.parse(localStorage.getItem('tt-stickers') || '[]');
